@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>YouTube MP3 Downloader</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 50px;
+        }
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+        input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 10px 0;
+        }
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .progress-container {
+            width: 100%;
+            background-color: #f0f0f0;
+            border-radius: 5px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+        .progress-bar {
+            width: 0%;
+            height: 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            text-align: center;
+            line-height: 30px;
+            color: white;
+            transition: width 0.3s;
+        }
+        #status {
+            text-align: center;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        .note {
+            text-align: center;
+            font-size: 12px;
+            color: #999;
+            margin-top: 20px;
+        }
+        .error {
+            color: #dc3545;
+        }
+        .success {
+            color: #28a745;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎵 YouTube MP3 Downloader</h1>
+        <input type="text" id="url" placeholder="https://www.youtube.com/watch?v=..." />
+        <button id="downloadBtn" onclick="startDownload()">📥 Download MP3</button>
+        <div class="progress-container">
+            <div id="progress-bar" class="progress-bar">0%</div>
+        </div>
+        <div id="status">Ready to download</div>
+        <div class="note">Make sure yt-dlp is in the same directory</div>
+    </div>
+    <script>
+        function startDownload() {
+            const urlInput = document.getElementById('url');
+            const url = urlInput.value.trim();
+            
+            console.log("URL entered:", url); // Debug log
+            
+            if (!url || url === "") {
+                const statusDiv = document.getElementById('status');
+                statusDiv.innerHTML = '❌ Please enter a URL!';
+                statusDiv.className = 'error';
+                return;
+            }
+            
+            // Disable button
+            const btn = document.getElementById('downloadBtn');
+            btn.disabled = true;
+            btn.innerHTML = '⏳ Downloading...';
+            
+            // Call C++ function
+            window.download(JSON.stringify({url: url}));
+        }
+        
+        window.updateProgress = function(percent) {
+            const bar = document.getElementById('progress-bar');
+            if (bar) {
+                bar.style.width = percent + '%';
+                bar.innerHTML = percent + '%';
+            }
+        };
+        
+        window.updateStatus = function(message) {
+            const statusDiv = document.getElementById('status');
+            if (statusDiv) {
+                statusDiv.innerHTML = message;
+                if (message.includes('✅')) {
+                    statusDiv.className = 'success';
+                } else if (message.includes('❌')) {
+                    statusDiv.className = 'error';
+                } else {
+                    statusDiv.className = '';
+                }
+            }
+        };
+        
+        window.enableButton = function() {
+            const btn = document.getElementById('downloadBtn');
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '📥 Download MP3';
+            }
+        };
+    </script>
+</body>
+</html>
