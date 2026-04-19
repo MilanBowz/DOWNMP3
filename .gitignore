@@ -11,6 +11,9 @@ CTestTestfile.cmake
 _deps
 
 downloads
+*.mp4
+*.mp3
+*.web*
 build
 downloader
 downloader.exe
