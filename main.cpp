@@ -36,10 +36,23 @@ void updateStatus(const std::string& msg) {
     webview_eval(g_w, js.c_str());
 }
 
-// Enable button
-void enableButton() {
+void enableButtonMain() {
     std::string js = "if(window.enableButton) window.enableButton();";
     webview_eval(g_w, js.c_str());
+    updateStatus("✅ .mp3 in /downloads. Ready for another download");
+}
+// Enable button
+void enableButton(bool succes) {
+    if(succes){
+        webview_dispatch(g_w, [](webview_t w, void* arg) {
+            enableButtonMain();
+        }, nullptr);
+    }
+    else{
+        webview_dispatch(g_w, [](webview_t w, void* arg) {
+            updateStatus("❌ Download failed! Check if yt-dlp & ffmpeg is installed.");
+        }, nullptr);
+    }    
 }
 
 // Download thread
@@ -53,16 +66,8 @@ void downloadThread(const std::string& url) {
     
     bool success = g_downloader->downloadAsMp3(url, "");
     
-    if (success) {
-        updateProgress(100);
-        updateStatus("✅ Download complete! Check downloads folder.");
-    } else {
-        updateProgress(0);
-        updateStatus("❌ Download failed! Check if yt-dlp is installed.");
-    }
-    
     g_isDownloading = false;
-    enableButton();
+    enableButton(success);
 }
 
 // Bind callback
@@ -113,7 +118,7 @@ void onDownload(const char* id, const char* req, void*) {
     
     if (url.empty()) {
         updateStatus("Failed to extract URL! Please try again.");
-        enableButton();
+        enableButton(false);
         return;
     }
     
@@ -131,6 +136,15 @@ void onDownload(const char* id, const char* req, void*) {
 }
 
 int main() {
+    /*#ifdef _WIN32
+        // Allocate a console for debug output
+        if (AllocConsole()) {
+            FILE* f;
+            freopen_s(&f, "CONOUT$", "w", stdout);
+            freopen_s(&f, "CONOUT$", "w", stderr);
+            SetConsoleTitle("Debug Console");
+        }
+    #endif*/
     std::cout << "Initializing YouTube MP3 Downloader..." << std::endl;
     
     g_downloader = new YouTubeDownloader();
@@ -147,7 +161,19 @@ int main() {
     
     // Get the directory where the executable is
     char exePath[1024];
-    ssize_t len = readlink("/proc/self/exe", exePath, sizeof(exePath)-1);
+    #ifdef _WIN32
+        // Windows version
+        DWORD len = GetModuleFileNameA(NULL, exePath, MAX_PATH);
+        exePath[len] = '\0';
+    #else
+        // Linux/Unix version
+        ssize_t len = readlink("/proc/self/exe", exePath, sizeof(exePath)-1);
+        if (len != -1) {
+            exePath[len] = '\0';
+        }
+    #endif
+    std::cout << "LEN: " << len << std::endl;
+
     std::string exeDir;
     if (len != -1) {
         exePath[len] = '\0';
@@ -157,7 +183,25 @@ int main() {
         exeDir = ".";
     }
     
-    std::string htmlPath = "file://" + exeDir + "/index.html";
+    std::string htmlPath;
+    #ifdef _WIN32
+        // Check if index.html exists in current directory
+        if (GetFileAttributesA("index.html") != INVALID_FILE_ATTRIBUTES) {
+            // Get the full absolute path
+            char absolutePath[MAX_PATH];
+            GetFullPathNameA("index.html", MAX_PATH, absolutePath, NULL);
+            
+            // Convert backslashes to forward slashes for URL
+            std::string urlPath(absolutePath);
+            std::replace(urlPath.begin(), urlPath.end(), '\\', '/');
+            
+            // Create the file URL with drive letter
+            htmlPath = "file:///" + urlPath;
+        }
+    #else
+        htmlPath = "file://" + exeDir + "/index.html";
+    #endif
+
     std::cout << "Loading: " << htmlPath << std::endl;
     webview_navigate(g_w, htmlPath.c_str());
     

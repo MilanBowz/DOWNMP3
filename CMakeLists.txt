@@ -52,28 +52,58 @@ if(PLATFORM_LINUX)
     )
     
 elseif(PLATFORM_WINDOWS)
+    set(WEBVIEW2_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/include")
+    # set(WEBVIEW2_LIBRARY_DIR "${CMAKE_SOURCE_DIR}/include/webview2/runtimes/win-x64/native")
     # Windows configuration using WebView2
-    add_executable(YouTubeDownloader main.cpp)
+    add_executable(YouTubeDownloader WIN32 main.cpp)
     
-    target_compile_definitions(YouTubeDownloader PRIVATE WEBVIEW_WIN32)
-    target_include_directories(YouTubeDownloader PRIVATE ${CMAKE_SOURCE_DIR})
+    # Define Windows platform
+    target_compile_definitions(YouTubeDownloader PRIVATE 
+        WEBVIEW_WIN32
+        _CRT_SECURE_NO_WARNINGS
+    )
     
-    # Link Windows libraries
+    target_include_directories(YouTubeDownloader PRIVATE ${CMAKE_SOURCE_DIR} ${CMAKE_SOURCE_DIR}/include)
+    
+    # Link Windows libraries including WebView2
     target_link_libraries(YouTubeDownloader
         user32
         ole32
         shell32
         advapi32
         uuid
+        version
+        shlwapi
+        # WebView2 is typically loaded dynamically via #include <WebView2.h>
+        # The DLL needs to be present at runtime
     )
     
     set_target_properties(YouTubeDownloader PROPERTIES
         OUTPUT_NAME "downloader"
         SUFFIX ".exe"
     )
-    
-    message(STATUS "For Windows, make sure WebView2Loader.dll is in the executable directory")
-    message(STATUS "Download from: https://www.nuget.org/packages/Microsoft.Web.WebView2/")
+
+    if(EXISTS ${CMAKE_SOURCE_DIR}/WebView2Loader.dll)
+    else()
+        message(WARNING "WebView2Loader.dll not found in project root.")
+        message(STATUS "1. Download from: https://www.nuget.org/packages/Microsoft.Web.WebView2/")
+        message(STATUS "2. Extract and copy WebView2Loader.dll to: ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
+    endif()
+
+    # Copy yt-dlp.exe to build directory
+    if(EXISTS ${CMAKE_SOURCE_DIR}/yt-dlp.exe)
+        add_custom_command(TARGET YouTubeDownloader POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                ${CMAKE_SOURCE_DIR}/yt-dlp.exe
+                ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/yt-dlp.exe
+            COMMENT "Copying yt-dlp.exe to output directory"
+        )
+    else()
+        message(WARNING "yt-dlp.exe not found in project root. Download from: https://github.com/yt-dlp/yt-dlp/releases")
+    endif()
+
+    message(STATUS "Building for Windows")
+    message(STATUS "WebView2 headers: ${CMAKE_SOURCE_DIR}/include")
     
 elseif(PLATFORM_ANDROID)
     # Android configuration - create shared library

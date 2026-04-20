@@ -2,126 +2,317 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>YouTube MP3 Downloader</title>
+    <title>MP3 Downloader</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+        
         body {
-            font-family: Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Press Start 2P', 'Arial', cursive;
+            background: linear-gradient(135deg, #1a0a2e 0%, #0f0c29 50%, #24243e 100%);
             margin: 0;
             padding: 50px;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
         }
+        
+        /* Smash Bros background effect */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                radial-gradient(circle at 20% 80%, rgba(255, 165, 0, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 0, 0, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(0, 255, 255, 0.05) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        /* Smash logo effect */
+        .smash-logo {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            font-size: 12px;
+            color: rgba(255, 165, 0, 0.3);
+            font-family: monospace;
+            z-index: 0;
+        }
+        
         .container {
-            max-width: 500px;
+            max-width: 600px;
             margin: 0 auto;
-            background: white;
-            border-radius: 10px;
-            padding: 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            background: linear-gradient(135deg, rgba(30, 20, 40, 0.95) 0%, rgba(20, 10, 30, 0.95) 100%);
+            border-radius: 15px;
+            padding: 40px;
+            box-shadow: 0 0 30px rgba(255, 165, 0, 0.3), 0 10px 30px rgba(0,0,0,0.5);
+            border: 2px solid rgba(255, 165, 0, 0.5);
+            position: relative;
+            z-index: 1;
+            backdrop-filter: blur(5px);
         }
+        
+        /* Smash Bros title styling */
         h1 {
             text-align: center;
-            color: #333;
+            color: #ffcc00;
             margin-bottom: 30px;
+            font-size: 20px;
+            text-shadow: 
+                3px 3px 0 #ff0000,
+                6px 6px 0 rgba(0,0,0,0.5);
+            letter-spacing: 2px;
+            animation: titleGlow 2s ease-in-out infinite;
         }
+        
+        @keyframes titleGlow {
+            0%, 100% { text-shadow: 3px 3px 0 #ff0000, 6px 6px 0 rgba(0,0,0,0.5); }
+            50% { text-shadow: 3px 3px 0 #ff6600, 8px 8px 0 rgba(0,0,0,0.7); }
+        }
+        
+        /* Character icon decorations */
+        .character-icons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 25px;
+            font-size: 24px;
+            filter: drop-shadow(2px 2px 2px rgba(0,0,0,0.5));
+        }
+        
+        .character-icons span {
+            animation: bounce 2s ease-in-out infinite;
+            display: inline-block;
+        }
+        
+        .character-icons span:nth-child(1) { animation-delay: 0s; color: #ff4444; }
+        .character-icons span:nth-child(2) { animation-delay: 0.2s; color: #44ff44; }
+        .character-icons span:nth-child(3) { animation-delay: 0.4s; color: #4444ff; }
+        .character-icons span:nth-child(4) { animation-delay: 0.6s; color: #ffff44; }
+        .character-icons span:nth-child(5) { animation-delay: 0.8s; color: #ff44ff; }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-5px); }
+        }
+        
         input {
             width: 100%;
-            padding: 12px;
-            margin: 10px 0;
-            border: 2px solid #ddd;
-            border-radius: 5px;
-            font-size: 14px;
+            padding: 15px;
+            margin: 15px 0;
+            border: 2px solid #ff6600;
+            border-radius: 10px;
+            font-size: 12px;
+            font-family: 'Press Start 2P', monospace;
             box-sizing: border-box;
+            background: rgba(0,0,0,0.8);
+            color: #ffcc00;
+            transition: all 0.3s;
         }
+        
         input:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: #ffcc00;
+            box-shadow: 0 0 15px rgba(255, 204, 0, 0.5);
+            background: rgba(0,0,0,0.9);
         }
+        
+        input::placeholder {
+            color: #666;
+            font-size: 10px;
+        }
+        
         button {
             width: 100%;
-            padding: 12px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            padding: 15px;
+            background: linear-gradient(135deg, #ff6600 0%, #ff0000 100%);
+            color: #ffcc00;
             border: none;
-            border-radius: 5px;
-            font-size: 16px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-family: 'Press Start 2P', monospace;
             cursor: pointer;
-            margin: 10px 0;
+            margin: 15px 0;
+            text-shadow: 1px 1px 0 rgba(0,0,0,0.5);
+            transition: all 0.3s;
+            box-shadow: 0 5px 0 #cc0000;
         }
+        
         button:hover:not(:disabled) {
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            box-shadow: 0 7px 0 #cc0000;
+            background: linear-gradient(135deg, #ff7700 0%, #ff2200 100%);
         }
+        
+        button:active:not(:disabled) {
+            transform: translateY(5px);
+            box-shadow: 0 2px 0 #cc0000;
+        }
+        
         button:disabled {
-            opacity: 0.6;
+            opacity: 0.5;
             cursor: not-allowed;
+            transform: none;
         }
+        
         .progress-container {
             width: 100%;
-            background-color: #f0f0f0;
-            border-radius: 5px;
+            background-color: rgba(0,0,0,0.8);
+            border-radius: 10px;
             margin: 20px 0;
             overflow: hidden;
+            border: 1px solid #ff6600;
         }
+        
         .progress-bar {
             width: 0%;
-            height: 30px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 35px;
+            background: linear-gradient(90deg, #ff6600, #ffcc00, #ff6600);
+            background-size: 200% 100%;
             text-align: center;
-            line-height: 30px;
-            color: white;
+            line-height: 35px;
+            color: #000;
+            font-weight: bold;
+            font-size: 12px;
             transition: width 0.3s;
+            font-family: 'Press Start 2P', monospace;
+            animation: progressShine 1.5s linear infinite;
         }
+        
+        @keyframes progressShine {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        
         #status {
             text-align: center;
-            padding: 10px;
-            margin: 10px 0;
-            border-radius: 5px;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 10px;
             font-weight: bold;
-            color: #555;
+            font-size: 10px;
+            background: rgba(0,0,0,0.6);
+            border: 1px solid #ff6600;
+            color: #ffcc00;
         }
+        
         .note {
             text-align: center;
-            font-size: 12px;
-            color: #999;
-            margin-top: 20px;
+            font-size: 8px;
+            color: #888;
+            margin-top: 25px;
+            line-height: 1.5;
+            border-top: 1px solid rgba(255, 102, 0, 0.3);
+            padding-top: 15px;
         }
+        
         .error {
-            color: #dc3545;
+            color: #ff4444;
+            text-shadow: 0 0 5px rgba(255,0,0,0.5);
         }
+        
         .success {
-            color: #28a745;
+            color: #44ff44;
+            text-shadow: 0 0 5px rgba(68,255,68,0.5);
+        }
+        
+        /* Fighting game combo text effect */
+        @keyframes comboText {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(1.5); opacity: 0; }
+        }
+        
+        /* Damage percent styling */
+        .damage-percent {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            font-size: 12px;
+            color: #ff4444;
+            background: rgba(0,0,0,0.7);
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-family: 'Press Start 2P', monospace;
+            border: 1px solid #ff6600;
+            z-index: 1;
+        }
+        
+        /* VS screen effect */
+        .vs-effect {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 80px;
+            color: rgba(255, 102, 0, 0.05);
+            font-weight: bold;
+            pointer-events: none;
+            z-index: 0;
+            white-space: nowrap;
         }
     </style>
 </head>
 <body>
+    <div class="damage-percent">MP3 DOWNLOAD BATTLE</div>
+    <div class="vs-effect">VS</div>
+    <div class="smash-logo"> SUPER SMASH DOWNLOADER </div>
+    
     <div class="container">
-        <h1>🎵 YouTube MP3 Downloader</h1>
+        
+        <h1> MP3 DOWNLOADER </h1>
+        
         <input type="text" id="url" placeholder="https://www.youtube.com/watch?v=..." />
-        <button id="downloadBtn" onclick="startDownload()">📥 Download MP3</button>
+        
+        <button id="downloadBtn" onclick="startDownload()">
+            🎯 DOWNLOAD MP3 🎯
+        </button>
+        
         <div class="progress-container">
             <div id="progress-bar" class="progress-bar">0%</div>
         </div>
-        <div id="status">Ready to download</div>
-        <div class="note">Make sure yt-dlp is in the same directory</div>
+        
+        <div id="status"> READY TO DOWNLOAD!</div>
+        
+        <div class="note">
+            💥 yt-dlp.exe must be in the same directory! 💥<br>
+            ffmpeg required for MP3 conversion <br>
+        </div>
     </div>
+    
     <script>
         function startDownload() {
             const urlInput = document.getElementById('url');
             const url = urlInput.value.trim();
             
-            console.log("URL entered:", url); // Debug log
+            console.log("URL entered:", url);
             
             if (!url || url === "") {
                 const statusDiv = document.getElementById('status');
-                statusDiv.innerHTML = '❌ Please enter a URL!';
+                statusDiv.innerHTML = '❌ NO URL ENTERED! CHOOSE YOUR BATTLE! ❌';
                 statusDiv.className = 'error';
+                
+                // Screen shake effect
+                document.body.style.animation = 'shake 0.3s ease-in-out';
+                setTimeout(() => {
+                    document.body.style.animation = '';
+                }, 300);
                 return;
             }
             
             // Disable button
             const btn = document.getElementById('downloadBtn');
             btn.disabled = true;
-            btn.innerHTML = '⏳ Downloading...';
+            btn.innerHTML = '⚔️ DOWNLOADING... ⚔️';
+            
+            // Play smash sound effect (if supported)
+            try {
+                const audio = new Audio('data:audio/wav;base64,U3RlYWx0aCBzbWFzaCBzb3VuZA==');
+                // Note: This won't actually play, just for fun
+            } catch(e) {}
             
             // Call C++ function
             window.download(JSON.stringify({url: url}));
@@ -132,6 +323,13 @@
             if (bar) {
                 bar.style.width = percent + '%';
                 bar.innerHTML = percent + '%';
+                
+                // Change color based on progress
+                if (percent >= 100) {
+                    bar.style.background = 'linear-gradient(90deg, #44ff44, #ffcc00)';
+                } else if (percent >= 50) {
+                    bar.style.background = 'linear-gradient(90deg, #ffcc00, #ff6600)';
+                }
             }
         };
         
@@ -141,8 +339,18 @@
                 statusDiv.innerHTML = message;
                 if (message.includes('✅')) {
                     statusDiv.className = 'success';
+                    // Victory flash
+                    document.body.style.animation = 'victoryFlash 0.5s ease-in-out';
+                    setTimeout(() => {
+                        document.body.style.animation = '';
+                    }, 500);
                 } else if (message.includes('❌')) {
                     statusDiv.className = 'error';
+                    // Damage effect
+                    document.body.style.animation = 'damage 0.2s ease-in-out 3';
+                    setTimeout(() => {
+                        document.body.style.animation = '';
+                    }, 600);
                 } else {
                     statusDiv.className = '';
                 }
@@ -153,9 +361,30 @@
             const btn = document.getElementById('downloadBtn');
             if (btn) {
                 btn.disabled = false;
-                btn.innerHTML = '📥 Download MP3';
+                btn.innerHTML = '🎯 DOWNLOAD MP3 🎯';
             }
         };
+        
+        // Add some CSS animations
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+            
+            @keyframes victoryFlash {
+                0%, 100% { background: linear-gradient(135deg, #1a0a2e 0%, #0f0c29 50%, #24243e 100%); }
+                50% { background: radial-gradient(circle, #ffcc00, #ff6600); }
+            }
+            
+            @keyframes damage {
+                0%, 100% { filter: brightness(1); }
+                50% { filter: brightness(1.5) saturate(2); background: #ff0000; }
+            }
+        `;
+        document.head.appendChild(style);
     </script>
 </body>
 </html>

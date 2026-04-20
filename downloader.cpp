@@ -7,6 +7,7 @@
 #include <stdexcept>
 #include <array>      // Added for std::array
 #include <cstdio>     // Added for FILE, popen, pclose
+#include <algorithm>
 
 class YouTubeDownloader {
 private:
@@ -37,7 +38,15 @@ public:
                      const std::string& ffmpeg = "ffmpeg",
                      const std::string& output = "./downloads") 
         : ytdlpPath(ytdlp), ffmpegPath(ffmpeg), outputDir(output) {
-        
+        // Fix paths for Windows
+        #ifdef _WIN32
+            // If yt-dlp.exe is in current directory
+            if (std::filesystem::exists("./yt-dlp.exe")) {
+                ytdlpPath = ".\\yt-dlp.exe";
+            }
+            // Convert forward slashes to backslashes for Windows
+            std::replace(outputDir.begin(), outputDir.end(), '/', '\\');
+        #endif
         // Create output directory if it doesn't exist
         try {
             std::filesystem::create_directories(outputDir);
@@ -48,16 +57,25 @@ public:
 
     bool downloadAsMp3(const std::string& url, const std::string& customName = "") {
         try {
-            std::string outputTemplate = outputDir + "/%(title)s.%(ext)s";
-            if (!customName.empty()) {
-                outputTemplate = outputDir + "/" + customName + ".%(ext)s";
-            }
+            #ifdef _WIN32
+                std::string outputTemplate = outputDir + "/%(title)s.%(ext)s";
+                std::replace(outputTemplate.begin(), outputTemplate.end(), '/', '\\');
+                if (!customName.empty()) {
+                    outputTemplate = outputDir + "\\" + customName + ".%(ext)s";
+                }
+            #else
+                std::string outputTemplate = outputDir + "/%(title)s.%(ext)s";
+                if (!customName.empty()) {
+                    outputTemplate = outputDir + "/" + customName + ".%(ext)s";
+                }
+            #endif
 
             // Build yt-dlp command for audio extraction
             std::string command = ytdlpPath + " " + url + 
                                  " -x --audio-format mp3 " +
                                  "--audio-quality 0 " +
                                  "-o \"" + outputTemplate + "\" " +
+                                 "--force-overwrites " +
                                  "--no-playlist";
 
             std::cout << "Downloading: " << url << std::endl;
@@ -121,6 +139,38 @@ public:
     }
     
     bool checkDependencies() {
+#ifdef _WIN32
+        // Windows version - check if files exist
+        std::string ytdlpCheck = ytdlpPath+ ".exe";
+        
+        // Check if yt-dlp.exe exists
+        bool ytdlpFound = std::filesystem::exists(ytdlpCheck) || 
+                         std::filesystem::exists(ytdlpPath) ||
+                         !execCommand("where yt-dlp 2>nul").empty();
+        
+        if (!ytdlpFound) {
+            std::cerr << "Error: Make sure yt-dlp.exe is in the current directory or PATH\n";
+            std::cerr << "Download from: https://github.com/yt-dlp/yt-dlp/releases\n";
+            return false;
+        }
+        
+        // Check if ffmpeg is installed system-wide (in PATH)
+        std::string checkFfmpeg = "where ffmpeg 2>nul";
+        std::string ffmpegResult = execCommand(checkFfmpeg);
+        
+        if (ffmpegResult.empty()) {
+            std::cerr << "Error: ffmpeg is not installed or not in PATH!\n";
+            std::cerr << "Installation options:\n";
+            std::cerr << "  1. Run as Admin: winget install ffmpeg\n";
+            std::cerr << "  2. Download from: https://ffmpeg.org/download.html\n";
+            std::cerr << "  3. Add to PATH: C:\\ffmpeg\\bin\n";
+            return false;
+        }
+        
+        std::cout << "Dependencies found!\n";
+        return true;
+        
+#else
         // Check if yt-dlp is installed
         std::string checkYtdlp = "test -x " + ytdlpPath + " && echo 'Found'";
         std::string ytdlpResult = execCommand(checkYtdlp);
@@ -145,5 +195,6 @@ public:
         std::cout << "yt-dlp: " << ytdlpResult;
         std::cout << "ffmpeg: " << ffmpegResult;
         return true;
+#endif
     }
 };
